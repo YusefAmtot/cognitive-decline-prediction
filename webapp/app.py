@@ -28,8 +28,10 @@ from src.sessions.persistence import (
     append_session,
     count_sessions,
     find_participant_profile,
+    load_participant_sessions,
     save_participant_profile,
 )
+from webapp.charts import build_score_history_charts
 from src.tasks.composite import composite_from_normed_scores
 from src.tasks.delayed_recall import score_delayed_recall
 from src.tasks.memory import DEFAULT_WORD_BANK, generate_targets, score_free_recall
@@ -210,6 +212,7 @@ def _finalize_session() -> None:
 
     append_session(participant_id, outputs)
     n_sessions = count_sessions(participant_id)
+    charts = build_score_history_charts(load_participant_sessions(participant_id))
 
     personalized = None
     personalization_error = None
@@ -227,6 +230,7 @@ def _finalize_session() -> None:
         "min_sessions": MIN_SESSIONS_FOR_PERSONALIZATION,
         "personalized": personalized,
         "personalization_error": personalization_error,
+        "charts": charts,
     }
 
 

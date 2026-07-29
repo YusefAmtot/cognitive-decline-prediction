@@ -43,5 +43,37 @@
 <p>Not enough sessions yet for a personalized estimate - showing population-level info only.</p>
 {% endif %}
 
+<h2>Score history across sessions</h2>
+{% if charts %}
+<p>Line graphs of your own scores over time, one task at a time. Higher is better on every measure shown. Each graph is followed by a table with the exact numbers.</p>
+{% for chart in charts %}
+<figure class="chart">
+  <figcaption><h3>{{ chart.title }}</h3><p class="chart-unit">{{ chart.unit }}</p></figcaption>
+  <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="{{ chart.summary }}" class="line-chart">
+    <title>{{ chart.title }} over time</title>
+    <desc>{{ chart.summary }}</desc>
+    <line x1="{{ chart.x_left }}" y1="{{ chart.y_top }}" x2="{{ chart.x_left }}" y2="{{ chart.y_bottom }}" class="chart-axis" />
+    <line x1="{{ chart.x_left }}" y1="{{ chart.y_bottom }}" x2="{{ chart.x_right }}" y2="{{ chart.y_bottom }}" class="chart-axis" />
+    <text x="{{ chart.x_left - 6 }}" y="{{ chart.y_top + 4 }}" text-anchor="end" class="chart-axis-label">{{ chart.y_axis_top_label }}</text>
+    <text x="{{ chart.x_left - 6 }}" y="{{ chart.y_bottom }}" text-anchor="end" class="chart-axis-label">{{ chart.y_axis_bottom_label }}</text>
+    <polyline points="{{ chart.polyline }}" class="chart-line" />
+    {% for p in chart.points %}
+    <circle cx="{{ p.x }}" cy="{{ p.y }}" r="4" class="chart-point"><title>{{ p.session_label }}</title></circle>
+    <text x="{{ p.x }}" y="{{ p.y - 9 }}" text-anchor="middle" class="chart-point-label">{{ p.value_label }}</text>
+    {% endfor %}
+  </svg>
+  <table class="chart-table">
+    <caption>Exact values for {{ chart.title }}</caption>
+    <tr><th>Session</th><th>Date</th><th>Value ({{ chart.unit }})</th></tr>
+    {% for row in chart.table_rows %}
+    <tr><td>{{ row.session }}</td><td>{{ row.date }}</td><td>{{ row.value }}</td></tr>
+    {% endfor %}
+  </table>
+</figure>
+{% endfor %}
+{% else %}
+<p>Complete at least two sessions (with the same participant ID) to see your score trends as line graphs.</p>
+{% endif %}
+
 <p><a href="{{ url_for('index') }}">Start another session</a></p>
 {% endblock %}
