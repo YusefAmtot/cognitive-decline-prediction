@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Alternating sequence{% endblock %}
+{% block content %}
+<h1>Alternating Sequence (5 of 6)</h1>
+<p>Continue the pattern up to {{ trail_n }}: type it like <code>1 a 2 b 3 c ...</code></p>
+<form method="post">
+  <input type="text" name="sequence" placeholder="1 a 2 b 3 c ..." autofocus required>
+  <button type="submit">Submit</button>
+</form>
+{% endblock %}

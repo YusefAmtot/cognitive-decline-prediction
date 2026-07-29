@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Cognitive Test Demo{% endblock %}
+{% block content %}
+<h1>Cognitive Test Demo</h1>
+<p>Enter a participant ID. Use the same one every time to build up your own
+personalized history - after 3 sessions you'll get a personalized decline
+estimate instead of just population-level info.</p>
+<form method="post" action="{{ url_for('start') }}">
+  <label for="participant_id">Participant ID</label>
+  <input type="text" id="participant_id" name="participant_id" placeholder="e.g. me" required autofocus>
+  <button type="submit">Start session</button>
+</form>
+{% endblock %}

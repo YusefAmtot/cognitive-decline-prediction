@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Digit span{% endblock %}
+{% block content %}
+<h1>Digit Span (4 of 6)</h1>
+<p>Memorize these digits. They'll disappear automatically.</p>
+
+<div id="digit-stage">
+  <div class="word-list" id="digits">{{ digits|join(' ') }}</div>
+</div>
+
+<div id="recall-stage" style="display:none">
+  <p>Type the digits in the same order (no spaces needed).</p>
+  <form method="post">
+    <input type="text" name="digits" autofocus>
+    <button type="submit">Submit</button>
+  </form>
+</div>
+
+<script>
+  setTimeout(function () {
+    document.getElementById('digit-stage').style.display = 'none';
+    document.getElementById('recall-stage').style.display = 'block';
+  }, {{ study_ms }});
+</script>
+{% endblock %}

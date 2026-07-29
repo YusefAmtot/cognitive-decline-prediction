@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Immediate memory task{% endblock %}
+{% block content %}
+<h1>Immediate Memory Task (1 of 6)</h1>
+<p>Study these words. They'll disappear automatically.</p>
+
+<div id="word-stage">
+  <div class="word-list" id="words">{{ targets|join('  ') }}</div>
+  <p id="countdown">Study time: <span id="seconds-left">{{ study_seconds }}</span>s</p>
+</div>
+
+<div id="recall-stage" style="display:none">
+  <p>Recall as many words as you can. Type them separated by spaces or commas.</p>
+  <form method="post">
+    <textarea name="recall" rows="3" autofocus></textarea>
+    <button type="submit">Submit recall</button>
+  </form>
+</div>
+
+<script>
+  const studySeconds = {{ study_seconds }};
+  let secondsLeft = studySeconds;
+  const countdownEl = document.getElementById('seconds-left');
+
+  const tick = setInterval(function () {
+    secondsLeft -= 1;
+    countdownEl.textContent = Math.max(secondsLeft, 0);
+    if (secondsLeft <= 0) {
+      clearInterval(tick);
+      document.getElementById('word-stage').style.display = 'none';
+      document.getElementById('recall-stage').style.display = 'block';
+    }
+  }, 1000);
+</script>
+{% endblock %}

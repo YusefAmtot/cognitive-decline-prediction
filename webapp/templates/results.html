@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Results{% endblock %}
+{% block content %}
+<h1>Session Complete</h1>
+
+<h2>Raw task scores</h2>
+<table>
+  <tr><th>Task</th><th>Score</th><th>Max</th></tr>
+  {% for name, result in outputs.items() %}
+  <tr>
+    <td>{{ name }}</td>
+    <td>{{ result.score if result.score is not none else '-' }}</td>
+    <td>{{ result.max_score if result.max_score is not none else '-' }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Age/education-adjusted composite</h2>
+{% if normed.score is not none %}
+<p><strong>{{ '%.3f'|format(normed.score) }}</strong> (z-score scale, higher = better; see <code>docs/methodology.md</code>)</p>
+{% else %}
+<p>Not enough data to compute a composite this session.</p>
+{% endif %}
+
+<h2>Personalized decline estimate</h2>
+<p>Sessions recorded for this participant: {{ n_sessions }} / {{ min_sessions }} needed.</p>
+
+{% if personalization_error %}
+<p>Could not compute a personalized estimate this time: {{ personalization_error }}</p>
+{% elif personalized %}
+{% for row in personalized %}
+<table>
+  <tr><th>Field</th><th>Value</th></tr>
+  {% for key, value in row.items() %}
+  <tr>
+    <td>{{ key }}</td>
+    <td>{% if value is number %}{{ '%.5f'|format(value) }}{% else %}{{ value }}{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endfor %}
+{% else %}
+<p>Not enough sessions yet for a personalized estimate - showing population-level info only.</p>
+{% endif %}
+
+<p><a href="{{ url_for('index') }}">Start another session</a></p>
+{% endblock %}

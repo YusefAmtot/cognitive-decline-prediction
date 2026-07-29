@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Serial subtraction{% endblock %}
+{% block content %}
+<h1>Serial Subtraction (3 of 6)</h1>
+<p>Start at {{ serial_start }} and subtract {{ serial_step }} each time.</p>
+
+<form method="post">
+  {% set ns = namespace(cur=serial_start) %}
+  {% for i in range(serial_n) %}
+  <div class="serial-row">
+    <label for="answer_{{ i }}">Step {{ i + 1 }}: {{ ns.cur }} - {{ serial_step }} =</label>
+    <input type="number" id="answer_{{ i }}" name="answer_{{ i }}" required {% if i == 0 %}autofocus{% endif %}>
+  </div>
+  {% set ns.cur = ns.cur - serial_step %}
+  {% endfor %}
+  <button type="submit">Submit</button>
+</form>
+{% endblock %}

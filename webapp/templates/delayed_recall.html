@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Delayed recall{% endblock %}
+{% block content %}
+<h1>Delayed Recall (6 of 6)</h1>
+<p>Earlier, at the start, you saw a list of words. Recall as many as you can now.</p>
+<form method="post">
+  <textarea name="recall" rows="3" autofocus></textarea>
+  <button type="submit">Finish session</button>
+</form>
+{% endblock %}

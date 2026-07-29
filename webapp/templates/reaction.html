@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Reaction speed task{% endblock %}
+{% block content %}
+<h1>Reaction Speed Task (2 of 6)</h1>
+<p>Press <strong>SPACE</strong> (or click the button) as fast as you can when you see "GO".
+Timing is measured in your browser, not over the network, so it's accurate.</p>
+
+<div class="stimulus" id="stimulus"></div>
+<p id="status">Click "Start" when ready.</p>
+<button id="start-btn">Start</button>
+<button id="respond-btn" style="display:none">Respond</button>
+
+<form method="post" id="reaction-form" style="display:none">
+  <input type="hidden" name="trials_json" id="trials_json">
+</form>
+
+<script>
+  const nTrials = {{ n_trials }};
+  const minForeMs = {{ min_foreperiod_ms }};
+  const maxForeMs = {{ max_foreperiod_ms }};
+  let trials = [];
+  let waitingForResponse = false;
+  let stimulusTime = 0;
+
+  function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+  function onResponse() {
+    if (!waitingForResponse) return;
+    waitingForResponse = false;
+    const rt = performance.now() - stimulusTime;
+    trials.push({ trial: trials.length + 1, stimulus: "GO", rt_ms: rt, correct: true });
+    document.getElementById('stimulus').textContent = '';
+    runNextTrial();
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.code === 'Space') { e.preventDefault(); onResponse(); }
+  });
+  document.getElementById('respond-btn').addEventListener('click', onResponse);
+
+  async function runNextTrial() {
+    if (trials.length >= nTrials) {
+      document.getElementById('status').textContent = 'Done - submitting...';
+      document.getElementById('respond-btn').style.display = 'none';
+      document.getElementById('trials_json').value = JSON.stringify(trials);
+      document.getElementById('reaction-form').submit();
+      return;
+    }
+    document.getElementById('status').textContent =
+      'Trial ' + (trials.length + 1) + ' of ' + nTrials + ': wait for GO...';
+    const fore = minForeMs + Math.random() * (maxForeMs - minForeMs);
+    await sleep(fore);
+    stimulusTime = performance.now();
+    waitingForResponse = true;
+    document.getElementById('stimulus').textContent = 'GO';
+  }
+
+  document.getElementById('start-btn').addEventListener('click', function () {
+    this.style.display = 'none';
+    document.getElementById('respond-btn').style.display = 'inline-block';
+    runNextTrial();
+  });
+</script>
+{% endblock %}
