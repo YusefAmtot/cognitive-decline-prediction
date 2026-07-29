@@ -43,6 +43,50 @@
 <p>Not enough sessions yet for a personalized estimate - showing population-level info only.</p>
 {% endif %}
 
+<h2>Domain trends: memory vs. attention</h2>
+{% if domain_chart %}
+<p>Both lines are demographically-adjusted z-scores (see <code>docs/methodology.md</code>), so they share one axis unlike the raw task scores below. <strong>0 marks the population average</strong> for someone with the same age and education; above 0 is better than that average, below is worse.</p>
+<figure class="chart">
+  <div class="chart-legend">
+    {% for s in domain_chart.series %}
+    <span class="chart-legend-item"><span class="chart-legend-swatch {{ s.css_class }}"></span>{{ s.label }}</span>
+    {% endfor %}
+  </div>
+  <svg viewBox="0 0 {{ domain_chart.width }} {{ domain_chart.height }}" role="img" aria-label="{{ domain_chart.summary }}" class="line-chart">
+    <title>Memory and attention domain z-scores over time</title>
+    <desc>{{ domain_chart.summary }}</desc>
+    <line x1="{{ domain_chart.x_left }}" y1="{{ domain_chart.y_top }}" x2="{{ domain_chart.x_left }}" y2="{{ domain_chart.y_bottom }}" class="chart-axis" />
+    <line x1="{{ domain_chart.x_left }}" y1="{{ domain_chart.y_bottom }}" x2="{{ domain_chart.x_right }}" y2="{{ domain_chart.y_bottom }}" class="chart-axis" />
+    <line x1="{{ domain_chart.x_left }}" y1="{{ domain_chart.zero_y }}" x2="{{ domain_chart.x_right }}" y2="{{ domain_chart.zero_y }}" class="chart-zero-line" />
+    <text x="{{ domain_chart.x_right }}" y="{{ domain_chart.zero_y - 4 }}" text-anchor="end" class="chart-axis-label">0 (population average)</text>
+    <text x="{{ domain_chart.x_left - 6 }}" y="{{ domain_chart.y_top + 4 }}" text-anchor="end" class="chart-axis-label">{{ domain_chart.y_axis_top_label }}</text>
+    <text x="{{ domain_chart.x_left - 6 }}" y="{{ domain_chart.y_bottom }}" text-anchor="end" class="chart-axis-label">{{ domain_chart.y_axis_bottom_label }}</text>
+    {% for s in domain_chart.series %}
+    <polyline points="{{ s.polyline }}" class="chart-line {{ s.css_class }}" />
+    {% for p in s.points %}
+    <circle cx="{{ p.x }}" cy="{{ p.y }}" r="4" class="chart-point {{ s.css_class }}"><title>{{ p.session_label }}</title></circle>
+    {% endfor %}
+    <text x="{{ s.end_x }}" y="{{ s.end_y - 9 }}" text-anchor="end" class="chart-end-label">{{ s.end_label }}</text>
+    {% endfor %}
+  </svg>
+  <table class="chart-table">
+    <caption>Exact z-scores per session</caption>
+    <tr>
+      <th>Session</th><th>Date</th>
+      {% for key, label in domain_chart.table_columns %}<th>{{ label }}</th>{% endfor %}
+    </tr>
+    {% for row in domain_chart.table_rows %}
+    <tr>
+      <td>{{ row.session }}</td><td>{{ row.date }}</td>
+      {% for key, label in domain_chart.table_columns %}<td>{{ row[key] }}</td>{% endfor %}
+    </tr>
+    {% endfor %}
+  </table>
+</figure>
+{% else %}
+<p>Complete at least two sessions (with the same participant ID) to see your memory/attention domain trends.</p>
+{% endif %}
+
 <h2>Score history across sessions</h2>
 {% if charts %}
 <p>Line graphs of your own scores over time, one task at a time. Higher is better on every measure shown. Each graph is followed by a table with the exact numbers.</p>

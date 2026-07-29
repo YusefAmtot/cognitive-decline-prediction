@@ -3,6 +3,9 @@
 {% block content %}
 <h1>A few details</h1>
 <p>First time seeing this participant ID - these are needed for age/education-adjusted (personalized) scoring.</p>
+{% if error %}
+<p class="disclaimer">{{ error }}</p>
+{% endif %}
 <form method="post">
   <label for="age">Age</label>
   <input type="number" id="age" name="age" min="1" max="120" required>

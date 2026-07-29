@@ -12,3 +12,7 @@ Thumbs.db
 node_modules/
 .vscode/
 .idea/
+
+# Real participant data from local webapp/CLI use (age, education, sex, raw
+# scores) - never simulated/fixture data, so it must never be committed.
+/data/sessions/

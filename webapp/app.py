@@ -20,9 +20,11 @@ from typing import Any, Dict
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import pandas as pd
 from flask import Flask, redirect, render_template, request, url_for
 
 from src.longitudinal.prediction import estimate_personalized_decline
+from src.preprocessing import normalize_sessions_to_long
 from src.sessions.persistence import (
     MIN_SESSIONS_FOR_PERSONALIZATION,
     append_session,
@@ -31,8 +33,8 @@ from src.sessions.persistence import (
     load_participant_sessions,
     save_participant_profile,
 )
-from webapp.charts import build_score_history_charts
-from src.tasks.composite import composite_from_normed_scores
+from webapp.charts import build_domain_history_chart, build_score_history_charts
+from src.tasks.composite import composite_from_normed_scores, composite_from_task_outputs
 from src.tasks.delayed_recall import score_delayed_recall
 from src.tasks.memory import DEFAULT_WORD_BANK, generate_targets, score_free_recall
 from src.tasks.multidomain import (
@@ -86,18 +88,44 @@ def start():
     return redirect(url_for("task_memory"))
 
 
+def _validate_profile_form(form) -> tuple[Dict[str, Any] | None, str | None]:
+    """Parse and range-check the profile form.
+
+    The HTML inputs already carry min/max/required, but that only stops a
+    browser's own submit button - a hand-crafted or malformed POST must not
+    reach `float()`/`int()` unchecked and crash the request with a 500.
+    Returns (parsed_fields, None) on success or (None, error_message) on
+    the first problem found.
+    """
+    try:
+        age = float(form.get("age", ""))
+        education = int(form.get("education", ""))
+    except ValueError:
+        return None, "Age and years of education must be numbers."
+
+    if not (1 <= age <= 120):
+        return None, "Age must be between 1 and 120."
+    if not (0 <= education <= 30):
+        return None, "Years of education must be between 0 and 30."
+
+    sex = form.get("sex", "").strip().upper()
+    if sex not in ("M", "F"):
+        return None, "Sex must be M or F."
+
+    return {"age_baseline": age, "education_years": education, "sex": sex}, None
+
+
 @app.route("/profile", methods=["GET", "POST"])
 def profile():
     if "participant_id" not in STATE:
         return redirect(url_for("index"))
 
     if request.method == "POST":
-        new_profile = save_participant_profile(
-            STATE["participant_id"],
-            age_baseline=float(request.form["age"]),
-            education_years=int(request.form["education"]),
-            sex=request.form["sex"].strip().upper(),
-        )
+        fields, error = _validate_profile_form(request.form)
+        if error:
+            return render_template("profile.html", error=error), 400
+
+        new_profile = save_participant_profile(STATE["participant_id"], **fields)
         STATE["profile"] = new_profile
         return redirect(url_for("task_memory"))
 
@@ -210,9 +238,20 @@ def _finalize_session() -> None:
     task_norms = fit_task_norms()
     normed = composite_from_normed_scores(outputs, profile["age_baseline"], profile["education_years"], task_norms)
 
+    # Raw (non-demographic-adjusted) composite, purely so sessions_log.csv's
+    # composite_raw_score column - which persistence.py has always expected
+    # under the "composite" key - actually gets populated instead of staying
+    # empty for every session.
+    outputs["composite"] = composite_from_task_outputs(outputs)
+
     append_session(participant_id, outputs)
     n_sessions = count_sessions(participant_id)
-    charts = build_score_history_charts(load_participant_sessions(participant_id))
+    sessions_df = load_participant_sessions(participant_id)
+    charts = build_score_history_charts(sessions_df)
+
+    participants_df = pd.DataFrame([profile]).set_index("participant_id")
+    domain_long = normalize_sessions_to_long(sessions_df, participants_df, task_norms)
+    domain_chart = build_domain_history_chart(domain_long)
 
     personalized = None
     personalization_error = None
@@ -231,6 +270,7 @@ def _finalize_session() -> None:
         "personalized": personalized,
         "personalization_error": personalization_error,
         "charts": charts,
+        "domain_chart": domain_chart,
     }
 
 
